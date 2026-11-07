@@ -1,0 +1,48 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: intethunter-app
+    ports:
+      - "8745:8745"
+    volumes:
+      - ih-data:/app/data
+    environment:
+      - IH_DEBUG=false
+      - IH_HOST=0.0.0.0
+      - IH_PORT=8745
+      - IH_DOCKER_ENABLED=true
+      - IH_ADB_PATH=adb
+    networks:
+      - ih-net
+    restart: unless-stopped
+    mem_limit: 1g
+    cpus: 2
+
+  emulator:
+    build:
+      context: ./emulator
+      dockerfile: Dockerfile
+    container_name: intethunter-emu
+    privileged: true
+    ports:
+      - "5555:5555"   # ADB
+      - "6080:6080"   # noVNC web screen
+      - "27042:27042" # Frida server
+    environment:
+      - EMULATOR_PARAMS=-memory 2048 -cores 2 -no-window -no-audio -gpu swiftshader_indirect
+    networks:
+      - ih-net
+    mem_limit: 4g
+    cpus: 2
+    profiles:
+      - emulator
+
+volumes:
+  ih-data:
+    driver: local
+
+networks:
+  ih-net:
+    driver: bridge
